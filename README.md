@@ -1,60 +1,29 @@
-# template-for-proposals
+# String.prototype.safeReplace
 
-A repository template for ECMAScript proposals.
+Status: This proposal has not been presented to TC39 yet.
 
-## Before creating a proposal
+## Motivation
 
-Please ensure the following:
-  1. You have read the [process document](https://tc39.github.io/process-document/)
-  1. You have reviewed the [existing proposals](https://github.com/tc39/proposals/)
-  1. You are aware that your proposal requires being a member of TC39, or locating a TC39 delegate to "champion" your proposal
+The goal of this proposal is to provide the safer and faster analogue to the [old good String.prototype.replace](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#Specifying_a_string_as_a_parameter) method.
 
-## Create your proposal repo
+According to the docs, the first argument can be a regexp/string (**pattern**) and the second argument can be a string/function (**replacement**).
 
-Follow these steps:
-  1.  Click the green ["use this template"](https://github.com/tc39/template-for-proposals/generate) button in the repo header. (Note: Do not fork this repo in GitHub's web interface, as that will later prevent transfer into the TC39 organization)
-  1.  Go to your repo settings “Options” page, under “GitHub Pages”, and set the source to the **master branch** (and click Save, if it does not autosave this setting)
-      1. check "Enforce HTTPS"
-      1. On "Options", under "Features", Ensure "Issues" is checked, and disable "Wiki", and "Projects" (unless you intend to use Projects)
-      1. Under "Merge button", check "automatically delete head branches"
-<!--
-  1.  Avoid merge conflicts with build process output files by running:
-      ```sh
-      git config --local --add merge.output.driver true
-      git config --local --add merge.output.driver true
-      ```
-  1.  Add a post-rewrite git hook to auto-rebuild the output on every commit:
-      ```sh
-      cp hooks/post-rewrite .git/hooks/post-rewrite
-      chmod +x .git/hooks/post-rewrite
-      ```
--->
-  1.  ["How to write a good explainer"][explainer] explains how to make a good first impression.
+If we use **regexp pattern**, we can use [legacy RegExp $1-$9 placeholders](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/n) in **string replacement**:
 
-      > Each TC39 proposal should have a `README.md` file which explains the purpose
-      > of the proposal and its shape at a high level.
-      >
-      > ...
-      >
-      > The rest of this page can be used as a template ...
+```javascript
+var str = 'John Smith';
+str.replace(/(\w+)\s(\w+)/, '$2, $1'); // "Smith, John"
+```
 
-      Your explainer can point readers to the `index.html` generated from `spec.emu`
-      via markdown like
+That's ok, but what is happening here?
+```javascript
+'foo'.replace('foo', '$&-$&-$&'); // "foo-foo-foo"
+```
 
-      ```markdown
-      You can browse the [ecmarkup output](https://ACCOUNT.github.io/PROJECT/)
-      or browse the [source](https://github.com/ACCOUNT/PROJECT/blob/master/spec.emu).
-      ```
+We **don't use regexp pattern**, but result is strange.
 
-      where *ACCOUNT* and *PROJECT* are the first two path elements in your project's Github URL.
-      For example, for github.com/**tc39**/**template-for-proposals**, *ACCOUNT* is "tc39"
-      and *PROJECT* is "template-for-proposals".
-
-
-## Maintain your proposal repo
-
-  1. Make your changes to `spec.emu` (ecmarkup uses HTML syntax, but is not HTML, so I strongly suggest not naming it ".html")
-  1. Any commit that makes meaningful changes to the spec, should run `npm run build` and commit the resulting output.
-  1. Whenever you update `ecmarkup`, run `npm run build` and commit any changes that come from that dependency.
-  
-  [explainer]: https://github.com/tc39/how-we-work/blob/master/explainer.md
+The thing is that **string replacement** can contain [special replacement patterns](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#Specifying_a_string_as_a_parameter):
+- `$$` - inserts a "$".
+- `$&` - inserts the matched substring.
+- ``$` `` - inserts the portion of the string that precedes the matched substring.
+- `$'` - inserts the portion of the string that follows the matched substring.
